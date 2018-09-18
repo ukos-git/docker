@@ -1,0 +1,3 @@
+[submodule "iputils/freerdp"]
+	path = iputils/freerdp
+	url = https://github.com/ukos-git/FreeRDP.git
