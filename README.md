@@ -2,6 +2,55 @@
 
 my public docker collection
 
+## printserver-postprocess
+
+Available settings variables and their standard settings:
+
+```bash
+    PLUGIN_VERBOSE=1
+    PLUGIN_BASE_DIR="/printserver/data"
+    PLUGIN_STORAGE="cache"
+    PLUGIN_OUTPUT="_build"
+    PLUGIN_DESTINATION="processed.pdf"
+    PLUGIN_FILE_POOL=SnapScanLossless
+    PLUGIN_FILE_FORMAT=tiff
+    PLUGIN_SCAN_LANG=deu
+```
+
+Remove `PLUGIN_` prefix when configuring the `.drone.yml` plugin.
+
+Example plugin:
+
+```yml
+kind: pipeline
+name: default
+
+clone:
+  depth: 1
+
+steps:
+- name: postprocess
+  image: ukos/printserver-postprocess
+  settings:
+    BASE_DIR: .
+    STORAGE: cache
+    DESTINATION: processed.pdf
+    FILE_POOL: SnapScanLossless
+    FILE_FORMAT: tiff
+    SCAN_LANG: deu
+    VERBOSE: 1
+  when:
+    branch:
+      exclude:
+      - master
+
+trigger:
+  branch:
+    - scan/*
+  event:
+  - push
+```
+
 ## iputils
 
 This Package builds the current debian package of

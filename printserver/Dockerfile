@@ -17,6 +17,4 @@ RUN DEBIAN_FRONTEND=noninteractive \
 RUN mkdir /printserver
 COPY postprocess.sh filepool.sh /printserver/
 WORKDIR /printserver
-RUN useradd -s /bin/bash docker; exit 0
-USER docker
 ENTRYPOINT /bin/bash /printserver/postprocess.sh
