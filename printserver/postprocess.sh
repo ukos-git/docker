@@ -61,7 +61,7 @@ if [ ! -e "$PLUGIN_STORAGE" ]; then
     exit 1
 fi
 
-MAGICK_TMPDIR="$(mktemp -d magickXXXX)"
+MAGICK_TMPDIR="$(mktemp -d --tmpdir=$PLUGIN_STORAGE magickXXXX)"
 cleanup() {
     if ((PLUGIN_VERBOSE)); then
         echo "script $0 finished. cleaning up..."
