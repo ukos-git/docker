@@ -57,7 +57,7 @@ fi
 
 # test input parameters
 if [ ! -e "$PLUGIN_STORAGE" ]; then
-    echo "data dir does not exist"
+    echo "data dir $PLUGIN_STORAGE does not exist."
     exit 1
 fi
 
