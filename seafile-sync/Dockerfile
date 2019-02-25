@@ -14,7 +14,7 @@ RUN seaf-cli init \
 RUN ln -s /root/.ccnet /seafile/ccnet
 RUN mkdir -p /seafile/sync
 WORKDIR /seafile
-ENTRYPOINT seaf-cli start && sleep 1 && seaf-cli sync \
+ENTRYPOINT seaf-cli start && sleep 5 && seaf-cli sync \
 		-l $SEAFILE_LIBRARY \
 		-s $SEAFILE_DOMAIN \
 		-d $SEAFILE_DIRECTORY \
