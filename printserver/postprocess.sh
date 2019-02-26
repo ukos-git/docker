@@ -57,6 +57,10 @@ if [ -z "$PLUGIN_SCAN_LANG" ]; then
     PLUGIN_SCAN_LANG=deu
 fi
 
+if [ -z "$PLUGIN_SCAN_DPI" ]; then
+    PLUGIN_SCAN_DPI=600
+fi
+
 ################
 # END SETTINGS #
 ################
@@ -158,7 +162,7 @@ unscew() {
 
     unpaper \
         $PLUGIN_VERBOSE_DDASH \
-        --dpi $SCAN_DPI \
+        --dpi $PLUGIN_SCAN_DPI \
         --sheet-size a4 \
         --no-noise-filter \
         ${storage}/${filepool}%05d.${image_format} \
@@ -196,7 +200,7 @@ ocrmypdf_ocr() {
         exit 1
     fi
 
-    #--unpaper-args "--dip $SCAN_DPI --sheet-size a4 $PLUGIN_VERBOSE_DDASH" \
+    #--unpaper-args "--dip $PLUGIN_SCAN_DPI --sheet-size a4 $PLUGIN_VERBOSE_DDASH" \
     #--mask-barcodes \
     #--pdfa-image-compression jpeg \
 
@@ -205,6 +209,7 @@ ocrmypdf_ocr() {
         --deskew \
         --clean \
         -l deu \
+        --image-dpi $PLUGIN_SCAN_DPI \
         --output-type pdfa \
         "$input" \
         "$output"
