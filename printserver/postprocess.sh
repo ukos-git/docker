@@ -25,10 +25,10 @@ if [ -z "$PLUGIN_BASE_DIR" ]; then
 fi
 
 # input data directory
-if [ -z "$PLUGIN_STORAGE" ]; then
-    PLUGIN_STORAGE="cache"
+if [ -z "$PLUGIN_INPUT_DIR" ]; then
+    PLUGIN_INPUT_DIR="cache"
 fi
-PLUGIN_STORAGE="${PLUGIN_BASE_DIR}/${PLUGIN_STORAGE}"
+PLUGIN_INPUT_DIR="${PLUGIN_BASE_DIR}/${PLUGIN_INPUT_DIR}"
 
 # output data directory
 if [ -z "$PLUGIN_OUTPUT_DIR" ]; then
@@ -62,8 +62,8 @@ fi
 ################
 
 # test input parameters
-if [ ! -e "$PLUGIN_STORAGE" ]; then
-    echo "data dir $PLUGIN_STORAGE does not exist."
+if [ ! -e "$PLUGIN_INPUT_DIR" ]; then
+    echo "data dir $PLUGIN_INPUT_DIR does not exist."
     exit 1
 fi
 
@@ -278,25 +278,25 @@ convert_ghostscript() {
 
 # reset branch
 if command -v git > /dev/null; then
-    (cd $PLUGIN_STORAGE && git reset --hard HEAD)
+    (cd $PLUGIN_INPUT_DIR && git reset --hard HEAD)
 fi
 
 # Only unscew here if we are in pnm format.
 # Otherwise let ocrmypdf do the job.
 if [ $PLUGIN_FILE_FORMAT = pnm ]; then
-    unscew $PLUGIN_STORAGE $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
+    unscew $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
 fi
 
 # rotate and set dpi
-ScanSnapS1500_PostProcess $PLUGIN_STORAGE $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
+ScanSnapS1500_PostProcess $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
 
 # lossless merge scanned files to tiff file
 if [ "$PLUGIN_FILE_FORMAT" != "tiff" ]; then
-    filepool_convert "$PLUGIN_STORAGE" $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT tiff
+    filepool_convert "$PLUGIN_INPUT_DIR" $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT tiff
     PLUGIN_FILE_FORMAT=tiff
 fi
 COMBINED_TIFF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR combinedXXXX.tiff)"
-filepool_mergetiff "$PLUGIN_STORAGE" $PLUGIN_FILE_POOL $COMBINED_TIFF
+filepool_mergetiff "$PLUGIN_INPUT_DIR" $PLUGIN_FILE_POOL $COMBINED_TIFF
 
 if command -v ocrmypdf > /dev/null; then
     COMBINED_PDF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR combinedXXXX.pdf)"
