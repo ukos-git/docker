@@ -210,6 +210,8 @@ ocrmypdf_ocr() {
         --clean \
         -l deu \
         --image-dpi $PLUGIN_SCAN_DPI \
+        --jbig2-lossy \
+        --optimize 3 \
         --output-type pdfa \
         "$input" \
         "$output"
