@@ -1,10 +1,3 @@
-# 
-# This Makefile is based on https://github.com/byte-physics/igor-unit-testing-framework/blob/master/docu/docker/sphinx/Makefile
-#
-# Copyright 2013-2017 byte physics and contributors
-# provided under BSD-3-clause
-# 
-
 NAME       := ukos/printserver-postprocess
 LATEST     := ${NAME}:latest
 LOCAL_DIR  := ${HOME}/tank/programs/printserver
