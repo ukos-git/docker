@@ -8,11 +8,14 @@ RUN DEBIAN_FRONTEND=noninteractive \
 		img2pdf \
 		libtiff-tools \
 		netpbm \
-		ocrmypdf \
+		python3-pip \
 		pngtools \
 		pngquant \
 		tesseract-ocr tesseract-ocr-deu \
 		unpaper
+
+# install ocrmypdf from pip
+RUN pip3 install ocrmypdf
 
 # install JBIG2 encoder
 RUN DEBIAN_FRONTEND=noninteractive \
