@@ -75,7 +75,7 @@ fi
 MAGICK_TMPDIR="$(mktemp -d magickXXXX)"
 cleanup() {
     if ((PLUGIN_VERBOSE)); then
-        echo "script $0 finished. cleaning up..."
+        echo "cleaning up..."
     fi
     rm -rf "$MAGICK_TMPDIR" # delete this in any way
 
@@ -84,7 +84,8 @@ cleanup() {
     fi
 
     if ((PLUGIN_VERBOSE)); then
-        echo "script $0 finished"
+        echo "script $0 finished successfully."
+        echo "file is at $PLUGIN_DESTINATION."
     fi
     exit 0
 }
