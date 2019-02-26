@@ -26,7 +26,7 @@ fi
 
 # input data directory
 if [ -z "$PLUGIN_INPUT_DIR" ]; then
-    PLUGIN_INPUT_DIR="cache"
+    PLUGIN_INPUT_DIR="scan"
 fi
 PLUGIN_INPUT_DIR="${PLUGIN_BASE_DIR}/${PLUGIN_INPUT_DIR}"
 
