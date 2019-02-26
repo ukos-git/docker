@@ -88,6 +88,23 @@ filepool_move() {
 	done
 }
 
+filepool_push() {
+    local storage=$1
+    local filepool=$2
+    local image_format=$3
+
+	if ! command -v git 2>/dev/null; then
+		echo "$0: git not found."
+		exit 1
+	fi
+
+	for file in ${storage}/${filepool}*.${image_format}; do
+		git add -f $file
+		git commit -m "add $file"
+		git push --quiet &
+	done
+}
+
 # merge multiple tiff files into one
 filepool_mergetiff() {
     local storage=$1
