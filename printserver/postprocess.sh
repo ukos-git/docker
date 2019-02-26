@@ -31,16 +31,16 @@ fi
 PLUGIN_STORAGE="${PLUGIN_BASE_DIR}/${PLUGIN_STORAGE}"
 
 # output data directory
-if [ -z "$PLUGIN_OUTPUT" ]; then
-    PLUGIN_OUTPUT="_build"
+if [ -z "$PLUGIN_OUTPUT_DIR" ]; then
+    PLUGIN_OUTPUT_DIR="_build"
 fi
-PLUGIN_OUTPUT="${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT}"
+PLUGIN_OUTPUT_DIR="${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR}"
 
 # output file
 if [ -z "$PLUGIN_DESTINATION" ]; then
     PLUGIN_DESTINATION="processed.pdf"
 fi
-PLUGIN_DESTINATION="${PLUGIN_OUTPUT}/${PLUGIN_DESTINATION}"
+PLUGIN_DESTINATION="${PLUGIN_OUTPUT_DIR}/${PLUGIN_DESTINATION}"
 
 # file pool base name
 if [ -z "$PLUGIN_FILE_POOL" ]; then
@@ -67,9 +67,9 @@ if [ ! -e "$PLUGIN_STORAGE" ]; then
     exit 1
 fi
 
-if [ ! -e "$PLUGIN_OUTPUT" ]; then
-    echo "creating output data dir $PLUGIN_OUTPUT."
-    mkdir -p "$PLUGIN_OUTPUT"
+if [ ! -e "$PLUGIN_OUTPUT_DIR" ]; then
+    echo "creating output data dir $PLUGIN_OUTPUT_DIR."
+    mkdir -p "$PLUGIN_OUTPUT_DIR"
 fi
 
 MAGICK_TMPDIR="$(mktemp -d magickXXXX)"
@@ -295,14 +295,14 @@ if [ "$PLUGIN_FILE_FORMAT" != "tiff" ]; then
     filepool_convert "$PLUGIN_STORAGE" $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT tiff
     PLUGIN_FILE_FORMAT=tiff
 fi
-COMBINED_TIFF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT combinedXXXX.tiff)"
+COMBINED_TIFF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR combinedXXXX.tiff)"
 filepool_mergetiff "$PLUGIN_STORAGE" $PLUGIN_FILE_POOL $COMBINED_TIFF
 
 if command -v ocrmypdf > /dev/null; then
-    COMBINED_PDF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT combinedXXXX.pdf)"
+    COMBINED_PDF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR combinedXXXX.pdf)"
     img2pdf -o $COMBINED_PDF $COMBINED_TIFF
 
-    OCR_PDF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT ocrmypdfXXXX.pdf)"
+    OCR_PDF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR ocrmypdfXXXX.pdf)"
     ocrmypdf_ocr $COMBINED_PDF $OCR_PDF
 
     mv $OCR_PDF $PLUGIN_DESTINATION
@@ -312,15 +312,15 @@ fi
 exit 0
 
 # old variant disabled. more time consumptive but less resource consuming.
-TIFF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT combinedXXXX.tif)"
+TIFF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR combinedXXXX.tif)"
 process_pnm unpaper $TIFF
 
-PDF_OCR="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT tesseractocrXXXX.pdf)"
+PDF_OCR="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR tesseractocrXXXX.pdf)"
 tesseract_ocr $TIFF $PDF_OCR
 mv $PDF_OCR $PLUGIN_DESTINATION
 
 exit 0
 
 # no ghostscript!
-PDF_GS="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT ghostXXXX.pdf)"
+PDF_GS="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR ghostXXXX.pdf)"
 convert_ghostscript $PDF_OCR $PDF_GS
