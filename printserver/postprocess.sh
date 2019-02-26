@@ -32,7 +32,7 @@ PLUGIN_INPUT_DIR="${PLUGIN_BASE_DIR}/${PLUGIN_INPUT_DIR}"
 
 # output data directory
 if [ -z "$PLUGIN_OUTPUT_DIR" ]; then
-    PLUGIN_OUTPUT_DIR="_build"
+    PLUGIN_OUTPUT_DIR="build"
 fi
 PLUGIN_OUTPUT_DIR="${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR}"
 
