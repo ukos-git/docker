@@ -1,23 +1,20 @@
 FROM debian:latest
 MAINTAINER Matthias J. Kastner matthias@project-moby.net
+
+RUN apt-get update
+
+# install script dependencies
 RUN DEBIAN_FRONTEND=noninteractive \
-	apt-get update && \
 	apt-get install --assume-yes \
 		bc \
 		imagemagick \
 		img2pdf \
 		libtiff-tools \
 		netpbm \
-		python3-pip \
 		pngtools \
 		pngquant \
 		tesseract-ocr tesseract-ocr-deu \
 		unpaper
-
-# install ocrmypdf from pip
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
-RUN pip3 install ocrmypdf
 
 # install JBIG2 encoder
 RUN DEBIAN_FRONTEND=noninteractive \
@@ -37,6 +34,19 @@ WORKDIR /printserver/jbig2enc
 RUN /bin/sh autogen.sh
 RUN ./configure && make
 RUN make install
+
+# install ocrmypdf from pip
+RUN DEBIAN_FRONTEND=noninteractive \
+	apt-get install --assume-yes \
+		ghostscript \
+		libleptonica-dev \
+		python3-pip \
+		qpdf \
+		tesseract-ocr tesseract-ocr-deu \
+		unpaper
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+RUN pip3 install ocrmypdf
 
 RUN apt-get clean
 WORKDIR /printserver
