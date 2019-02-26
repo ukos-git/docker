@@ -15,6 +15,8 @@ RUN DEBIAN_FRONTEND=noninteractive \
 		unpaper
 
 # install ocrmypdf from pip
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
 RUN pip3 install ocrmypdf
 
 # install JBIG2 encoder
