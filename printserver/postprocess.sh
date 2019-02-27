@@ -285,11 +285,6 @@ convert_ghostscript() {
     fi
 }
 
-# reset branch
-if command -v git > /dev/null; then
-    (cd $PLUGIN_INPUT_DIR && git reset --hard HEAD)
-fi
-
 # Only unscew here if we are in pnm format.
 # Otherwise let ocrmypdf do the job.
 if [ $PLUGIN_FILE_FORMAT = pnm ]; then
