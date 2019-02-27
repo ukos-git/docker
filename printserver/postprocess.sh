@@ -112,7 +112,6 @@ ScanSnapS1500_PostProcess() {
 
     if ((PLUGIN_VERBOSE)); then
         echo "--- ScanSnapS1500_PostProcess ---"
-		filepool_status $storage $filepool $image_format
         local start=$(date +%s.%N)
     fi
 
@@ -297,6 +296,9 @@ convert_ghostscript() {
         echo "---"
     fi
 }
+
+filepool_status  $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
+echo "beginning postprocess."
 
 # rotate and set dpi
 ScanSnapS1500_PostProcess $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
