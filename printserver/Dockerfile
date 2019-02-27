@@ -1,4 +1,4 @@
-FROM debian:latest
+FROM debian:buster
 MAINTAINER Matthias J. Kastner matthias@project-moby.net
 
 RUN apt-get update
