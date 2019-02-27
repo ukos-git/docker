@@ -112,6 +112,7 @@ ScanSnapS1500_PostProcess() {
 
     if ((PLUGIN_VERBOSE)); then
         echo "--- ScanSnapS1500_PostProcess ---"
+		filepool_status $storage $filepool $image_format
         local start=$(date +%s.%N)
     fi
 
@@ -124,6 +125,7 @@ ScanSnapS1500_PostProcess() {
         ${storage}/${filepool}*.${image_format}
 
     if ((PLUGIN_VERBOSE)); then
+		filepool_status $storage $filepool $image_format
         local end=$(date +%s.%N)
         local diff=$(echo "$end - $start" | bc)
         echo "--- total time: $diff ---"
