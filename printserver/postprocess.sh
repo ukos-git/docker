@@ -207,8 +207,6 @@ ocrmypdf_ocr() {
         exit 1
     fi
 
-    #--mask-barcodes \
-    #--pdfa-image-compression jpeg \
 
     local unpaperargs=
     if [ $PLUGIN_FILE_FORMAT != pnm ]; then
@@ -219,14 +217,16 @@ ocrmypdf_ocr() {
 
     ocrmypdf \
         --remove-background \
-        --deskew \
+        --mask-barcodes \
         --clean \
-        -l deu \
         --image-dpi $PLUGIN_SCAN_DPI \
+        --deskew \
         $(eval $unpaperargs) \
         --jbig2-lossy \
         --optimize 3 \
         --output-type pdfa \
+        --pdfa-image-compression jpeg \
+        -l deu \
         "$input" \
         "$output"
 
