@@ -208,9 +208,15 @@ ocrmypdf_ocr() {
         exit 1
     fi
 
-    #--unpaper-args "--dip $PLUGIN_SCAN_DPI --sheet-size a4 $PLUGIN_VERBOSE_DDASH" \
     #--mask-barcodes \
     #--pdfa-image-compression jpeg \
+
+    local unpaperargs=
+    if [ $PLUGIN_FILE_FORMAT != pnm ]; then
+        unpaperargs='--unpaper-args "--dpi $PLUGIN_SCAN_DPI --sheet-size a4 $PLUGIN_VERBOSE_DDASH"'
+        echo adding unpaper arguments:
+        echo "$(eval $unpaperargs)"
+    fi
 
     ocrmypdf \
         --remove-background \
@@ -218,6 +224,7 @@ ocrmypdf_ocr() {
         --clean \
         -l deu \
         --image-dpi $PLUGIN_SCAN_DPI \
+        $(eval $unpaperargs) \
         --jbig2-lossy \
         --optimize 3 \
         --output-type pdfa \
@@ -294,12 +301,9 @@ convert_ghostscript() {
 # rotate and set dpi
 ScanSnapS1500_PostProcess $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
 
-if [ $PLUGIN_FILE_FORMAT != pnm ]; then
-    if ((VERBOSE)); then
-        echo "Note: consider scanning your files as pnm"
-    fi
+if [ $PLUGIN_FILE_FORMAT = pnm ]; then
+    unscew $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
 fi
-unscew $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
 
 # lossless merge scanned files to tiff file
 if [ "$PLUGIN_FILE_FORMAT" != "tiff" ]; then
