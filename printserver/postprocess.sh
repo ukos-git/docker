@@ -142,16 +142,16 @@ unscew() {
 
     if [ $image_format != pnm ]; then
         filepool_convert $storage $filepool $image_format pnm
-        image_format=pnm
     fi
 
     if ((PLUGIN_VERBOSE)); then
-        echo "--- unscew_pnm ---"
-		filepool_status $storage $filepool $image_format
+        echo "--- unscew ---"
+        local start=$(date +%s.%N)
+    fi
+		filepool_status $storage $filepool pnm
     fi
 
-    local files=${storage}/${filepool}*.${image_format}
-    local pnmInput=$(eval ls -l $files 2>/dev/null | wc -l)
+    local pnmInput=$(ls -l ${storage}/${filepool}*.pnm 2>/dev/null | wc -l)
     if ((pnmInput == 0)); then
         echo "no input files found"
         exit 1
@@ -167,10 +167,10 @@ unscew() {
         --dpi $PLUGIN_SCAN_DPI \
         --sheet-size a4 \
         --no-noise-filter \
-        ${storage}/${filepool}%05d.${image_format} \
-        ${storage}/${temp_pool}%05d.${image_format}
+        ${storage}/${filepool}%05d.pnm \
+        ${storage}/${temp_pool}%05d.pnm
 
-    local pnmOutput=$(ls -l ${storage}/${temp_pool}*.${image_format} 2>/dev/null| wc -l)
+    local pnmOutput=$(ls -l ${storage}/${temp_pool}*.pnm 2>/dev/null| wc -l)
     if ((pnmOutput == 0)); then
         echo "no output produced"
         exit 1
@@ -179,11 +179,17 @@ unscew() {
         rm -f ${storage}/${temp_pool}*.${image_format}
         exit 1
     fi
-    filepool_move $storage $temp_pool $image_format $filepool
+    filepool_move $storage $temp_pool pnm $filepool
+
+    if [ $image_format != pnm ]; then
+        filepool_convert $storage $filepool pnm $image_format
+    fi
 
     if ((PLUGIN_VERBOSE)); then
 		filepool_status $storage $filepool $image_format
-        echo "---"
+        local end=$(date +%s.%N)
+        local diff=$(echo "$end - $start" | bc)
+        echo "--- total time: $diff ---"
     fi
 }
 
@@ -285,14 +291,15 @@ convert_ghostscript() {
     fi
 }
 
-# Only unscew here if we are in pnm format.
-# Otherwise let ocrmypdf do the job.
-if [ $PLUGIN_FILE_FORMAT = pnm ]; then
-    unscew $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
-fi
-
 # rotate and set dpi
 ScanSnapS1500_PostProcess $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
+
+if [ $PLUGIN_FILE_FORMAT != pnm ]; then
+    if ((VERBOSE)); then
+        echo "Note: consider scanning your files as pnm"
+    fi
+fi
+unscew $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
 
 # lossless merge scanned files to tiff file
 if [ "$PLUGIN_FILE_FORMAT" != "tiff" ]; then
