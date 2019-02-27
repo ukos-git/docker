@@ -27,7 +27,6 @@ RUN DEBIAN_FRONTEND=noninteractive \
 		libtool \
 		zlib1g-dev
 RUN mkdir /printserver
-COPY postprocess.sh filepool.sh /printserver/
 WORKDIR /printserver
 RUN git clone https://github.com/agl/jbig2enc
 WORKDIR /printserver/jbig2enc
@@ -50,4 +49,5 @@ RUN pip3 install ocrmypdf
 
 RUN apt-get clean
 WORKDIR /printserver
+COPY postprocess.sh filepool.sh /printserver/
 ENTRYPOINT /bin/bash /printserver/postprocess.sh
