@@ -146,7 +146,6 @@ unscew() {
     if ((PLUGIN_VERBOSE)); then
         echo "--- unscew ---"
         local start=$(date +%s.%N)
-    fi
 		filepool_status $storage $filepool pnm
     fi
 
