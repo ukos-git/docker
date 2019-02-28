@@ -207,18 +207,18 @@ ocrmypdf_ocr() {
 
 
     local unpaperargs=
-    if [ $PLUGIN_FILE_FORMAT != pnm ]; then
+    if [ "$PLUGIN_FILE_FORMAT" != "pnm" ]; then
         unpaperargs='--unpaper-args "--dpi $PLUGIN_SCAN_DPI --sheet-size a4 $PLUGIN_VERBOSE_DDASH"'
         echo adding unpaper arguments:
-        echo "$(eval $unpaperargs)"
+        eval echo $unpaperargs
     fi
 
-    ocrmypdf \
+    eval ocrmypdf \
         --remove-background \
         --mask-barcodes \
         --clean \
         --deskew \
-        $(eval $unpaperargs) \
+        ${unpaperargs} \
         --jbig2-lossy \
         --optimize 3 \
         --output-type pdfa \
