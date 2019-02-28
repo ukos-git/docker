@@ -39,37 +39,37 @@ filepool_convert() {
         local start=$(date +%s.%N)
     fi
 
-	local magick_tmpdir="$(mktemp -d magickXXXX)"
-	trap "rm -rf $magick_tmpdir" EXIT
+    local magick_tmpdir="$(mktemp -d magickXXXX)"
+    trap "rm -rf $magick_tmpdir" EXIT
 
-	local n
-	local output
+    local n
+    local output
     local files=${storage}/${filepool}*.${image_format}
-	for file in $(eval ls $files); do
+    for file in $(eval ls $files); do
         n=$(filepool_getNumber $file)
-		output="${storage}/${filepool}$n.${image_format_dest}"
+        output="${storage}/${filepool}$n.${image_format_dest}"
 
-		# use package netpbm http://netpbm.sourceforge.net/
-		if [ "$image_format" = "pnm" -a "$image_format_dest" = "tiff" ]; then
-			pnmtotiff "$file" > "$output"
-			continue
-		fi
-		if [ "$image_format" = "tiff" -a "$image_format_dest" = "pnm" ]; then
-			tifftopnm "$file" > "$output"
-			continue
-		fi
+        # use package netpbm http://netpbm.sourceforge.net/
+        if [ "$image_format" = "pnm" -a "$image_format_dest" = "tiff" ]; then
+            pnmtotiff "$file" > "$output"
+            continue
+        fi
+        if [ "$image_format" = "tiff" -a "$image_format_dest" = "pnm" ]; then
+            tifftopnm "$file" > "$output"
+            continue
+        fi
 
-		export magick_tmpdir && convert \
-			-limit memory 0 \
-			-limit map 0 \
-			"$file" \
-			-compress None \
-			"$output"
-	done
-	rm -f ${storage}/${filepool}*.${image_format}
+        export magick_tmpdir && convert \
+            -limit memory 0 \
+            -limit map 0 \
+            "$file" \
+            -compress None \
+            "$output"
+    done
+    rm -f ${storage}/${filepool}*.${image_format}
 
     if ((VERBOSE)); then
-		filepool_status $storage $filepool $image_format_dest
+        filepool_status $storage $filepool $image_format_dest
         local end=$(date +%s.%N)
         local diff=$(echo "$end - $start" | bc)
         echo "--- total time: $diff ---"
@@ -82,11 +82,11 @@ filepool_move() {
     local image_format=$3
     local filepool_dest=$4
 
-	local n
-	for file in ${storage}/${filepool}*.${image_format}; do
+    local n
+    for file in ${storage}/${filepool}*.${image_format}; do
         n=$(filepool_getNumber $file)
-		mv -f "$file" "${storage}/${filepool_dest}$n.${image_format}"
-	done
+        mv -f "$file" "${storage}/${filepool_dest}$n.${image_format}"
+    done
 }
 
 filepool_push() {
@@ -94,16 +94,16 @@ filepool_push() {
     local filepool=$2
     local image_format=$3
 
-	if ! command -v git 2>/dev/null; then
-		echo "$0: git not found."
-		exit 1
-	fi
+    if ! command -v git 2>/dev/null; then
+        echo "$0: git not found."
+        exit 1
+    fi
 
-	for file in ${storage}/${filepool}*.${image_format}; do
-		git add -f $file
-		git commit -m "add $file"
-		git push --quiet &
-	done
+    for file in ${storage}/${filepool}*.${image_format}; do
+        git add -f $file
+        git commit -m "add $file"
+        git push --quiet &
+    done
 }
 
 # merge multiple tiff files into one
