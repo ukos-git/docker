@@ -124,11 +124,15 @@ unscew() {
         exit 1
     fi
 
-    unpaper \
-        $PLUGIN_VERBOSE_DDASH \
-        --dpi $PLUGIN_SCAN_DPI \
-        ${storage}/${filepool}%05d.pnm \
-        ${storage}/${temp_pool}%05d.pnm
+    for file in ${storage}/${filepool}*.pnm; do
+        n=$(filepool_getNumber $file)
+        output="${storage}/${temp_pool}$n.pnm"
+
+        unpaper \
+            $PLUGIN_VERBOSE_DDASH \
+            --dpi $PLUGIN_SCAN_DPI \
+            $file $output
+    done
 
     local pnmOutput=$(ls -l ${storage}/${temp_pool}*.pnm 2>/dev/null| wc -l)
     if ((pnmOutput == 0)); then
