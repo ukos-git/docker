@@ -127,7 +127,6 @@ unscew() {
     unpaper \
         $PLUGIN_VERBOSE_DDASH \
         --dpi $PLUGIN_SCAN_DPI \
-        --sheet-size a4 \
         ${storage}/${filepool}%05d.pnm \
         ${storage}/${temp_pool}%05d.pnm
 
