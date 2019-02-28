@@ -132,7 +132,7 @@ unscew() {
 
     local pnmOutput=$(ls -l ${storage}/${temp_pool}*.pnm 2>/dev/null| wc -l)
     if ((pnmOutput == 0)); then
-        echo "no output produced"
+        echo "Error in unpaper processing no output produced"
         exit 1
     fi
     if ((pnmInput != pnmOutput)); then
