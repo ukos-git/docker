@@ -76,6 +76,51 @@ filepool_convert() {
     fi
 }
 
+# Rotate a filepool by 180 degrees
+#
+# Note: If acting on pnm files, performance can be increased
+#
+# Uses ntepbm as default and imagemagick as fall-back.
+filepool_rotate180() {
+    local storage=$1
+    local filepool=$2
+    local image_format=$3
+
+    if ((PLUGIN_VERBOSE)); then
+        echo "--- filepool_rotate180 ---"
+        local start=$(date +%s.%N)
+    fi
+
+    local files=${storage}/${filepool}*.${image_format}
+    for file in $(eval ls $files); do
+        # try to rotate pnm file
+        if [ "$image_format" = "pnm" ]; then
+            if pnmflip -rotate180 "$file" > "${file}.tmp"; then
+                if [ -e "${file}.tmp" ]; then
+                    rm "$file"
+                    mv "${file}.tmp" "$file"
+                fi
+                continue
+            fi
+        fi
+
+        # extend pixelcache in /etc/ImageMagick-6/policy.xml if magick fails
+        export MAGICK_TMPDIR && mogrify \
+            -limit memory 0 \
+            -limit map 0 \
+            -compress None \
+            -rotate 180 \
+            $file
+    done
+
+    if ((PLUGIN_VERBOSE)); then
+        filepool_status $storage $filepool $image_format
+        local end=$(date +%s.%N)
+        local diff=$(echo "$end - $start" | bc)
+        echo "--- total time: $diff ---"
+    fi
+}
+
 filepool_move() {
     local storage=$1
     local filepool=$2

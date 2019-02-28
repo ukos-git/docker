@@ -95,42 +95,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-#
-# Post Process Data using ImageMagick
-#
-# Files are
-#  * rotated
-#  * dpi value is set
-#
-# !WARNING! Performance exhaustive function
-# on an E-450 cpu ImageMagick takes about 10s for a single file of 97MiB 
-#
-ScanSnapS1500_PostProcess() {
-    local storage=$1
-    local filepool=$2
-    local image_format=$3
-
-    if ((PLUGIN_VERBOSE)); then
-        echo "--- ScanSnapS1500_PostProcess ---"
-        local start=$(date +%s.%N)
-    fi
-
-    # extend pixelcache in /etc/ImageMagick-6/policy.xml if magick fails
-    export MAGICK_TMPDIR && mogrify \
-        -limit memory 0 \
-        -limit map 0 \
-        -compress None \
-        -rotate 180 \
-        ${storage}/${filepool}*.${image_format}
-
-    if ((PLUGIN_VERBOSE)); then
-		filepool_status $storage $filepool $image_format
-        local end=$(date +%s.%N)
-        local diff=$(echo "$end - $start" | bc)
-        echo "--- total time: $diff ---"
-    fi
-}
-
 unscew() {
     local storage=$1
     local filepool=$2
@@ -294,11 +258,9 @@ convert_ghostscript() {
     fi
 }
 
-filepool_status  $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
 echo "beginning postprocess."
-
-# rotate and set dpi
-ScanSnapS1500_PostProcess $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
+filepool_status  $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
+filepool_rotate180 $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
 
 if [ $PLUGIN_FILE_FORMAT = pnm ]; then
     unscew $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
