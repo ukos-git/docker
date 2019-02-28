@@ -10,6 +10,7 @@ build-docker:
 	docker build -t ${LATEST} .
 
 push: build-docker
+	git push
 	docker push ukos/printserver-postprocess:latest
 
 shell: build-docker
