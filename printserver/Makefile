@@ -14,7 +14,7 @@ push: build-docker
 	docker push ukos/printserver-postprocess:latest
 
 shell: build-docker
-	docker run --rm -it ${LINKDIR} ${LATEST} /bin/bash
+	docker run --rm -it --entrypoint /bin/bash ${LINKDIR} ${LATEST}
 
 run: build-docker
 	docker run --rm ${LINKDIR} ${LATEST}
