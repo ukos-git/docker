@@ -217,7 +217,6 @@ ocrmypdf_ocr() {
         --remove-background \
         --mask-barcodes \
         --clean \
-        --image-dpi $PLUGIN_SCAN_DPI \
         --deskew \
         $(eval $unpaperargs) \
         --jbig2-lossy \
