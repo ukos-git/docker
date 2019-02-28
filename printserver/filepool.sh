@@ -50,11 +50,11 @@ filepool_convert() {
 
 		# use package netpbm http://netpbm.sourceforge.net/
 		if [ "$image_format" = "pnm" -a "$image_format_dest" = "tiff" ]; then
-			pnmtotiff "$file" "$output"
+			pnmtotiff "$file" > "$output"
 			continue
 		fi
 		if [ "$image_format" = "tiff" -a "$image_format_dest" = "pnm" ]; then
-			tifftopnm "$file" "$output"
+			tifftopnm "$file" > "$output"
 			continue
 		fi
 
