@@ -269,7 +269,6 @@ fi
 # lossless merge scanned files to tiff file
 if [ "$PLUGIN_FILE_FORMAT" != "tiff" ]; then
     filepool_convert "$PLUGIN_INPUT_DIR" $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT tiff
-    PLUGIN_FILE_FORMAT=tiff
 fi
 COMBINED_TIFF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR combinedXXXX.tiff)"
 filepool_mergetiff "$PLUGIN_INPUT_DIR" $PLUGIN_FILE_POOL $COMBINED_TIFF
