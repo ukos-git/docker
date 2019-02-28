@@ -39,7 +39,7 @@ filepool_convert() {
     fi
 
 	local magick_tmpdir="$(mktemp -d magickXXXX)"
-	trap rm -rf $magick_tmpdir EXIT
+	trap "rm -rf $magick_tmpdir" EXIT
 
 	local n
 	local output
