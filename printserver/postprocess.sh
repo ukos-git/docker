@@ -269,16 +269,15 @@ if [ $PLUGIN_FILE_FORMAT = pnm ]; then
     unscew $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
 fi
 
-# lossless merge scanned files to tiff file
-if [ "$PLUGIN_FILE_FORMAT" != "tiff" ]; then
-    filepool_convert "$PLUGIN_INPUT_DIR" $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT tiff
-fi
-COMBINED_TIFF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR combinedXXXX.tiff)"
-filepool_mergetiff "$PLUGIN_INPUT_DIR" $PLUGIN_FILE_POOL $COMBINED_TIFF
-
 if command -v ocrmypdf > /dev/null; then
+    # use img2pdf to get a pdf file
+    # https://gitlab.mister-muffin.de/josch/img2pdf
+    if [ "$PLUGIN_FILE_FORMAT" != "tiff" ]; then
+        # img2pdf can only handle tiff
+        filepool_convert "$PLUGIN_INPUT_DIR" $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT tiff
+    fi
     COMBINED_PDF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR combinedXXXX.pdf)"
-    img2pdf -o $COMBINED_PDF $COMBINED_TIFF
+    img2pdf $PLUGIN_INPUT_DIR/${PLUGIN_FILE_POOL}*.tiff -o $COMBINED_PDF
 
     OCR_PDF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR ocrmypdfXXXX.pdf)"
     ocrmypdf_ocr $COMBINED_PDF $OCR_PDF
@@ -289,7 +288,17 @@ fi
 
 exit 0
 
-# old variant disabled. more time consumptive but less resource consuming.
+# old variant disabled.
+
+FILE_POOL_SIZE=$(du -kc $PLUGIN_INPUT_DIR/${PLUGIN_FILE_POOL}*.${PLUGIN_FILE_FORMAT} \
+                | tail -n1 | cut -f1)
+if test $FILE_POOL_SIZE -gt $((4 * 1024 * 1024)); then
+    echo "tiff can only contain up to 4GB of data"
+	exit 1
+fi
+COMBINED_TIFF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR combinedXXXX.tiff)"
+filepool_mergetiff "$PLUGIN_INPUT_DIR" $PLUGIN_FILE_POOL $COMBINED_TIFF
+
 TIFF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR combinedXXXX.tif)"
 process_pnm unpaper $TIFF
 
