@@ -1,6 +1,9 @@
 FROM debian:buster
 MAINTAINER Matthias J. Kastner matthias@project-moby.net
 
+RUN mkdir /printserver
+WORKDIR /printserver
+
 # install JBIG2 encoder
 RUN DEBIAN_FRONTEND=noninteractive \
 	apt-get update && \
@@ -12,13 +15,12 @@ RUN DEBIAN_FRONTEND=noninteractive \
 		libleptonica-dev \
 		libtool \
 		zlib1g-dev
-RUN mkdir /printserver
-WORKDIR /printserver
 RUN git clone https://github.com/agl/jbig2enc
 WORKDIR /printserver/jbig2enc
 RUN /bin/sh autogen.sh
 RUN ./configure && make
 RUN make install
+WORKDIR /printserver
 
 # install fixed ocrmypdf from pip
 RUN DEBIAN_FRONTEND=noninteractive \
@@ -50,6 +52,5 @@ RUN DEBIAN_FRONTEND=noninteractive \
 		unpaper && \
 	apt-get clean
 
-WORKDIR /printserver
 COPY postprocess.sh filepool.sh /printserver/
 ENTRYPOINT /bin/bash /printserver/postprocess.sh
