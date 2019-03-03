@@ -175,7 +175,7 @@ ocrmypdf_ocr() {
 
     local unpaperargs=
     if [ "$PLUGIN_FILE_FORMAT" != "pnm" ]; then
-        unpaperargs='--unpaper-args "--dpi $PLUGIN_SCAN_DPI --sheet-size a4 $PLUGIN_VERBOSE_DDASH"'
+        unpaperargs='--unpaper-args "--dpi $PLUGIN_SCAN_DPI $PLUGIN_VERBOSE_DDASH"'
         echo adding unpaper arguments:
         eval echo $unpaperargs
     fi
