@@ -25,7 +25,7 @@ test: build-docker
 
 	docker run --rm \
 		--env PLUGIN_BASE_DIR=${DOCKER_DIR} \
-		--env PLUGIN_INPUT_DIR=scan \
+		--env PLUGIN_INPUT_DIR=unittest \
 		--env PLUGIN_FILE_POOL=status \
 		--env PLUGIN_FILE_FORMAT=pnm \
 		--env PLUGIN_SCAN_DPI=72 \
@@ -34,7 +34,7 @@ test: build-docker
 
 	docker run --rm \
 		--env PLUGIN_BASE_DIR=${DOCKER_DIR} \
-		--env PLUGIN_INPUT_DIR=scan \
+		--env PLUGIN_INPUT_DIR=unittest \
 		--env PLUGIN_FILE_POOL=status \
 		--env PLUGIN_FILE_FORMAT=tiff \
 		--env PLUGIN_SCAN_DPI=72 \
