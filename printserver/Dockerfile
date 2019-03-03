@@ -1,23 +1,9 @@
 FROM debian:buster
 MAINTAINER Matthias J. Kastner matthias@project-moby.net
 
-RUN apt-get update
-
-# install script dependencies
-RUN DEBIAN_FRONTEND=noninteractive \
-	apt-get install --assume-yes \
-		bc \
-		imagemagick \
-		img2pdf \
-		libtiff-tools \
-		netpbm \
-		pngtools \
-		pngquant \
-		tesseract-ocr tesseract-ocr-deu \
-		unpaper
-
 # install JBIG2 encoder
 RUN DEBIAN_FRONTEND=noninteractive \
+	apt-get update && \
 	apt-get install --assume-yes \
 		automake \
 		build-essential \
@@ -34,20 +20,36 @@ RUN /bin/sh autogen.sh
 RUN ./configure && make
 RUN make install
 
-# install ocrmypdf from pip
+# install fixed ocrmypdf from pip
 RUN DEBIAN_FRONTEND=noninteractive \
+	apt-get update && \
 	apt-get install --assume-yes \
 		ghostscript \
 		libleptonica-dev \
 		python3-pip \
 		qpdf \
 		tesseract-ocr tesseract-ocr-deu \
-		unpaper
+		unpaper && \
+	apt-get clean
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 RUN pip3 install ocrmypdf
 
-RUN apt-get clean
+# install postprocess.sh script dependencies
+RUN DEBIAN_FRONTEND=noninteractive \
+	apt-get update && \
+	apt-get install --assume-yes \
+		bc \
+		imagemagick \
+		img2pdf \
+		libtiff-tools \
+		netpbm \
+		pngtools \
+		pngquant \
+		tesseract-ocr tesseract-ocr-deu \
+		unpaper && \
+	apt-get clean
+
 WORKDIR /printserver
 COPY postprocess.sh filepool.sh /printserver/
 ENTRYPOINT /bin/bash /printserver/postprocess.sh
