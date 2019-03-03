@@ -51,6 +51,11 @@ filepool_convert() {
 
         # use package netpbm http://netpbm.sourceforge.net/
         if [ "$image_format" = "pnm" -a "$image_format_dest" = "tiff" ]; then
+            if command -v pamtotiff; then
+                echo "new version of netpbm detected.\n" \
+                     "See http://netpbm.sourceforge.net/doc/pamtotiff.html"
+                pamtotiff
+            fi
             pnmtotiff "$file" > "$output"
             continue
         fi
