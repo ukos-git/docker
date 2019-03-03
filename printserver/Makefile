@@ -17,10 +17,12 @@ shell: build-docker
 	docker run --rm -it --entrypoint /bin/bash ${LINKDIR} ${LATEST}
 
 test: build-docker
+	cd ${LOCAL_DIR} && git diff --cached --exit-code
 	cd ${LOCAL_DIR} && \
-		git stash && \
 		git checkout master && \
+		git branch -D unittest || /bin/true && \
 		git checkout -b unittest
+
 	docker run --rm \
 		--env PLUGIN_BASE_DIR=${DOCKER_DIR} \
 		--env PLUGIN_INPUT_DIR=scan \
@@ -30,8 +32,7 @@ test: build-docker
 		--env PLUGIN_VERBOSE=1 \
 		${LINKDIR} ${LATEST}
 	cd ${LOCAL_DIR} && \
-		git reset --hard && \
 		git clean -f && \
+		git reset --hard && \
 		git checkout master && \
-		git branch -D unittest && \
-		git stash pop || /bin/true
+		git branch -D unittest
