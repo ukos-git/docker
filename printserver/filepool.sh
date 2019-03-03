@@ -6,6 +6,7 @@ filepool_getNumber() {
     local file="$1"
 
     n=$(echo ${file##*/} | sed 's/[a-z]\+\([0-9]\+\).[a-z]\+/\1/i')
+    n=$((n))
     n=$(printf '%05d' $n)
 
     echo $n
