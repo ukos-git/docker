@@ -31,6 +31,16 @@ test: build-docker
 		--env PLUGIN_SCAN_DPI=72 \
 		--env PLUGIN_VERBOSE=1 \
 		${LINKDIR} ${LATEST}
+
+	docker run --rm \
+		--env PLUGIN_BASE_DIR=${DOCKER_DIR} \
+		--env PLUGIN_INPUT_DIR=scan \
+		--env PLUGIN_FILE_POOL=status \
+		--env PLUGIN_FILE_FORMAT=tiff \
+		--env PLUGIN_SCAN_DPI=72 \
+		--env PLUGIN_VERBOSE=1 \
+		${LINKDIR} ${LATEST}
+
 	cd ${LOCAL_DIR} && \
 		git clean -f && \
 		git reset --hard && \
