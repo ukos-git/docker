@@ -5,33 +5,67 @@
 filepool_getNumber() {
     local file="$1"
 
-    echo ${file##*/} | sed 's/[a-z]\+\([0-9]\+\).[a-z]\+/\1/i'
+    n=$(echo ${file##*/} | sed 's/[a-z]\+\([0-9]\+\).[a-z]\+/\1/i')
+    n=$(printf '%05d' $n)
+
+    echo $n
 }
 
 # numer of files in the specified pool
 filepool_getSize() {
-    local storage=$1
-    local filepool=$2
-    local image_format=$3
+    local filepool=$1
+    local image_format=$2
 
-    local files=${storage}/${filepool}*.${image_format}
-
+    local files=${filepool}*.${image_format}
     echo $(($(eval ls -l $files 2>/dev/null | wc -l)))
 }
 
 # disk usage of pool
 filepool_status() {
-    local storage=$1
-    local filepool=$2
-    local image_format=$3
+    local filepool=$1
+    local image_format=$2
 
-    du -hc ${storage}/${filepool}*.${image_format}
+    local numfiles=$(filepool_getSize "$filepool" $image_format)
+    local size=$(du -kc ${filepool}*.${image_format} | tail -n1 | cut -f1)
+    local size_human=$(du -hc ${filepool}*.${image_format} | tail -n1 | cut -f1)
+
+    echo -n "filepool_status: "
+    echo -n "$numfiles file(s) "
+    echo -n "${size}K ($size_human) "
+    echo -n "${filepool}*.${image_format}"
+    echo .
+
+    if ((numfiles == 0)); then
+        echo "Error! No files in pool!"
+        exit 1
+    fi
 }
 
+# use img2pdf to get a pdf file
+# https://gitlab.mister-muffin.de/josch/img2pdf
+filepool_merge_pdf() {
+    local filepool=$1
+    local image_format=$2
+    local outputfile=$3
+
+    # img2pdf can only handle jpeg, png, tiff file pools
+    if [ "$image_format" != "jpeg" -a "$image_format" != "png" -a "$image_format" != "tiff" ]; then
+        local merge_dir="$(mktemp -d --tmpdir mergepdfpoolXXXX)"
+        local filepool_merge="${merge_dir}/file"
+        local image_format_merge=tiff
+        filepool_convert $filepool $image_format $filepool_merge $image_format_merge
+        img2pdf ${filepool_merge}*.${image_format_merge} -o $outputfile
+        rm -rf $merge_dir
+    else
+        img2pdf ${filepool}*.${image_format} -o $outputfile
+    fi
+}
+
+
 filepool_convert() {
-    local storage=$1
-    local filepool=$2
-    local image_format=$3
+    local filepool=$1
+    local image_format=$2
+    local filepool_dest=$3
     local image_format_dest=$4
 
     if ((VERBOSE)); then
@@ -39,21 +73,24 @@ filepool_convert() {
         local start=$(date +%s.%N)
     fi
 
-    local magick_tmpdir="$(mktemp -d magickXXXX)"
+    local magick_tmpdir="$(mktemp --tmpdir -d magickXXXX)"
     trap "rm -rf $magick_tmpdir" EXIT
 
-    local n
-    local output
-    local files=${storage}/${filepool}*.${image_format}
-    for file in $(eval ls $files); do
+    local n=
+    local output=
+    local file=
+    for file in ${filepool}*.${image_format}; do
         n=$(filepool_getNumber $file)
-        output="${storage}/${filepool}$n.${image_format_dest}"
+        output="${filepool_dest}${n}.${image_format_dest}"
+
+        echo "input: $file"
+        echo "output: $output"
 
         # use package netpbm http://netpbm.sourceforge.net/
         if [ "$image_format" = "pnm" -a "$image_format_dest" = "tiff" ]; then
             if command -v pamtotiff; then
-                echo "new version of netpbm detected.\n" \
-                     "See http://netpbm.sourceforge.net/doc/pamtotiff.html"
+                echo "New version of netpbm detected."
+                echo "See http://netpbm.sourceforge.net/doc/pamtotiff.html"
                 pamtotiff
             fi
             pnmtotiff "$file" > "$output"
@@ -71,10 +108,9 @@ filepool_convert() {
             -compress None \
             "$output"
     done
-    rm -f ${storage}/${filepool}*.${image_format}
 
     if ((VERBOSE)); then
-        filepool_status $storage $filepool $image_format_dest
+        filepool_status $filepool_dest $image_format_dest
         local end=$(date +%s.%N)
         local diff=$(echo "$end - $start" | bc)
         echo "--- total time: $diff ---"
@@ -87,17 +123,15 @@ filepool_convert() {
 #
 # Uses ntepbm as default and imagemagick as fall-back.
 filepool_rotate180() {
-    local storage=$1
-    local filepool=$2
-    local image_format=$3
+    local filepool=$1
+    local image_format=$2
 
     if ((PLUGIN_VERBOSE)); then
         echo "--- filepool_rotate180 ---"
         local start=$(date +%s.%N)
     fi
 
-    local files=${storage}/${filepool}*.${image_format}
-    for file in $(eval ls $files); do
+    for file in ${filepool}*.${image_format}; do
         # try to rotate pnm file
         if [ "$image_format" = "pnm" ]; then
             if pnmflip -rotate180 "$file" > "${file}.tmp"; then
@@ -119,7 +153,7 @@ filepool_rotate180() {
     done
 
     if ((PLUGIN_VERBOSE)); then
-        filepool_status $storage $filepool $image_format
+        filepool_status ${filepool} $image_format
         local end=$(date +%s.%N)
         local diff=$(echo "$end - $start" | bc)
         echo "--- total time: $diff ---"
@@ -127,50 +161,35 @@ filepool_rotate180() {
 }
 
 filepool_move() {
-    local storage=$1
-    local filepool=$2
-    local image_format=$3
-    local filepool_dest=$4
+    local filepool=$1
+    local image_format=$2
+    local filepool_dest=$3
 
     local n
-    for file in ${storage}/${filepool}*.${image_format}; do
+    for file in ${filepool}*.${image_format}; do
         n=$(filepool_getNumber $file)
-        mv -f "$file" "${storage}/${filepool_dest}$n.${image_format}"
-    done
-}
-
-filepool_push() {
-    local storage=$1
-    local filepool=$2
-    local image_format=$3
-
-    if ! command -v git 2>/dev/null; then
-        echo "$0: git not found."
-        exit 1
-    fi
-
-    for file in ${storage}/${filepool}*.${image_format}; do
-        git add -f $file
-        git commit -m "add $file"
-        git push --quiet &
+        mv -f "$file" "${filepool_dest}$n.${image_format}"
     done
 }
 
 # merge multiple tiff files into one
-filepool_mergetiff() {
-    local storage=$1
-    local filepool=$2
-    local outputfile=$3
-
-    local image_format="tiff"
-    local files=${storage}/${filepool}*.${image_format}
+filepool_merge_tiff() {
+    local filepool=$1
+    local outputfile=$2
 
     if ((VERBOSE)); then
-        echo "--- filepool_mergetiff ---"
+        echo "--- filepool_merge_tiff ---"
         local start=$(date +%s.%N)
     fi
 
-    eval tiffcp $files $outputfile
+    # WARNING for unhandled usage of tiff filepools on large files
+    local size=$(du -kc ${filepool}*.tiff | tail -n1 | cut -f1)
+    if [ $size -gt $((2 * 1024 * 1024)) ]; then
+        echo "Error: tiffs can only contain up to 2GB of data."
+        exit 1
+    fi
+
+    tiffcp ${filepool}*.tiff $outputfile
 
     if ((VERBOSE)); then
         du -h $outputfile

@@ -28,13 +28,11 @@ fi
 if [ -z "$PLUGIN_INPUT_DIR" ]; then
     PLUGIN_INPUT_DIR="scan"
 fi
-PLUGIN_INPUT_DIR="${PLUGIN_BASE_DIR}/${PLUGIN_INPUT_DIR}"
 
 # output data directory
 if [ -z "$PLUGIN_OUTPUT_DIR" ]; then
     PLUGIN_OUTPUT_DIR="build"
 fi
-PLUGIN_OUTPUT_DIR="${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR}"
 
 # output file
 if [ -z "$PLUGIN_DESTINATION" ]; then
@@ -66,90 +64,96 @@ fi
 ################
 
 # test input parameters
-if [ ! -e "$PLUGIN_INPUT_DIR" ]; then
-    echo "data dir $PLUGIN_INPUT_DIR does not exist."
+if [ ! -e "${PLUGIN_BASE_DIR}/${PLUGIN_INPUT_DIR}" ]; then
+    echo "Error: Input directory $PLUGIN_INPUT_DIR does not exist."
     exit 1
 fi
 
-if [ ! -e "$PLUGIN_OUTPUT_DIR" ]; then
-    echo "creating output data dir $PLUGIN_OUTPUT_DIR."
-    mkdir -p "$PLUGIN_OUTPUT_DIR"
+if [ -e "${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR}" ]; then
+    echo "Initializing output dir at ${PLUGIN_OUTPUT_DIR}..."
+    rm -rf "${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR}"
 fi
+mkdir -p "${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR}"
+
+INPUT_POOL="${PLUGIN_BASE_DIR}/${PLUGIN_INPUT_DIR}/${PLUGIN_FILE_POOL}"
 
 UNPAPER_ARGS="--dpi $PLUGIN_SCAN_DPI $PLUGIN_VERBOSE_DDASH"
         
-
 MAGICK_TMPDIR="$(mktemp -d magickXXXX)"
+trap "rm -rf $MAGICK_TMPDIR" EXIT
+
 cleanup() {
     if ((PLUGIN_VERBOSE)); then
         echo "cleaning up..."
     fi
-    rm -rf "$MAGICK_TMPDIR" # delete this in any way
 
-    if [ ! -e  "$PLUGIN_DESTINATION" ]; then
+    if [ ! -e  "${PLUGIN_BASE_DIR}/${PLUGIN_DESTINATION}" ]; then
         exit 1
     fi
 
     if ((PLUGIN_VERBOSE)); then
         echo "script $0 finished successfully."
-        echo "file is at $PLUGIN_DESTINATION."
+        echo "file is at ${PLUGIN_BASE_DIR}/${PLUGIN_DESTINATION}."
     fi
     exit 0
 }
 trap cleanup EXIT
 
-unscew() {
-    local storage=$1
-    local filepool=$2
-    local image_format=$3
-
-    # intermediate pool
-    local temp_pool="unscew"
-
-    if [ $image_format != pnm ]; then
-        filepool_convert $storage $filepool $image_format pnm
-    fi
-
-    if ((PLUGIN_VERBOSE)); then
-        echo "--- unscew ---"
-        local start=$(date +%s.%N)
-		filepool_status $storage $filepool pnm
-    fi
-
-    local pnmInput=$(ls -l ${storage}/${filepool}*.pnm 2>/dev/null | wc -l)
-    if ((pnmInput == 0)); then
-        echo "no input files found"
-        exit 1
-    fi
+# uses unpaper to descew files one by one
+descew() {
+    local filepool=$1
+    local image_format=$2
 
     if ! command -v unpaper > /dev/null; then
-        echo "unpaper missing. https://github.com/Flameeyes/unpaper"
+        echo "unpaper missing."
+        echo "see https://github.com/Flameeyes/unpaper"
         exit 1
     fi
 
-    for file in ${storage}/${filepool}*.pnm; do
-        n=$(filepool_getNumber $file)
-        output="${storage}/${temp_pool}$n.pnm"
-        unpaper $UNPAPER_ARGS $file $output
-    done
-
-    local pnmOutput=$(ls -l ${storage}/${temp_pool}*.pnm 2>/dev/null| wc -l)
-    if ((pnmOutput == 0)); then
-        echo "Error in unpaper processing no output produced"
-        exit 1
-    fi
-    if ((pnmInput != pnmOutput)); then
-        rm -f ${storage}/${temp_pool}*.${image_format}
-        exit 1
-    fi
-    filepool_move $storage $temp_pool pnm $filepool
-
-    if [ $image_format != pnm ]; then
-        filepool_convert $storage $filepool pnm $image_format
-    fi
+    # intermediate pools
+    local pnm_dir="$(mktemp -d --tmpdir pnmpoolXXXX)"
+    local pnm_pool="${pnm_dir}/file"
+    local unpaper_dir="$(mktemp -d --tmpdir unpaperpoolXXXX)"
+    local unpaper_pool="${unpaper_dir}/file"
 
     if ((PLUGIN_VERBOSE)); then
-		filepool_status $storage $filepool $image_format
+        echo "--- descew ---"
+        local start=$(date +%s.%N)
+    fi
+    filepool_status $filepool $image_format
+
+    if [ $image_format != pnm ]; then
+        filepool_convert "$filepool" $image_format "$pnm_pool" pnm
+    else
+        filepool_move $filepool pnm $pnm_pool
+    fi
+    filepool_status $pnm_pool pnm
+
+    local pnmInput=$(filepool_getSize $pnm_pool $image_format)
+
+    for file in ${pnm_pool}*.pnm; do
+        n=$(filepool_getNumber $file)
+        output="${unpaper_pool}${n}.pnm"
+        unpaper $UNPAPER_ARGS $file $output
+    done
+    filepool_status $unpaper_pool pnm
+
+    local pnmOutput=$(filepool_getSize $unpaper_pool pnm)
+    if ((pnmInput != pnmOutput)); then
+        echo "Error in unpaper processing. No output produced"
+        exit 1
+    fi
+
+    if [ $image_format != pnm ]; then
+        filepool_convert $unpaper_pool pnm $filepool $image_format
+    else
+        filepool_move $unpaper_pool pnm $filepool
+    fi
+    filepool_status "$filepool" $image_format
+    rm -rf $pnm_dir
+    rm -rf $unpaper_dir
+
+    if ((PLUGIN_VERBOSE)); then
         local end=$(date +%s.%N)
         local diff=$(echo "$end - $start" | bc)
         echo "--- total time: $diff ---"
@@ -174,16 +178,14 @@ ocrmypdf_ocr() {
 
     local unpaperargs=
     if [ "$PLUGIN_FILE_FORMAT" != "pnm" ]; then
-        unpaperargs="--unpaper-args $UNPAPER_ARGS" 
         echo adding unpaper arguments:
+        unpaperargs='--clean --deskew --unpaper-args "$UNPAPER_ARGS"'
         eval echo $unpaperargs
     fi
 
     eval ocrmypdf \
         --remove-background \
         --mask-barcodes \
-        --clean \
-        --deskew \
         ${unpaperargs} \
         --jbig2-lossy \
         --optimize 3 \
@@ -260,53 +262,37 @@ convert_ghostscript() {
     fi
 }
 
-echo "beginning postprocess."
-filepool_status  $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
-filepool_rotate180 $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
+output_filename() {
+    local basename=$1
+
+    mktemp --dry-run \
+           --tmpdir=${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR} \
+           "$basename"
+}
+
+echo "Beginning postprocess of scanned images..."
+
+filepool_status "$INPUT_POOL" "$PLUGIN_FILE_FORMAT"
+filepool_rotate180 "$INPUT_POOL" "$PLUGIN_FILE_FORMAT"
 
 if [ $PLUGIN_FILE_FORMAT = pnm ]; then
-    unscew $PLUGIN_INPUT_DIR $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT
+    descew "$INPUT_POOL" "$PLUGIN_FILE_FORMAT"
 fi
 
 if command -v ocrmypdf > /dev/null; then
-    # use img2pdf to get a pdf file
-    # https://gitlab.mister-muffin.de/josch/img2pdf
-    if [ "$PLUGIN_FILE_FORMAT" != "tiff" ]; then
-        # img2pdf can only handle tiff
-        filepool_convert "$PLUGIN_INPUT_DIR" $PLUGIN_FILE_POOL $PLUGIN_FILE_FORMAT tiff
-    fi
-    COMBINED_PDF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR combinedXXXX.pdf)"
-    img2pdf $PLUGIN_INPUT_DIR/${PLUGIN_FILE_POOL}*.tiff -o $COMBINED_PDF
-
-    OCR_PDF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR ocrmypdfXXXX.pdf)"
-    ocrmypdf_ocr $COMBINED_PDF $OCR_PDF
-
-    mv $OCR_PDF $PLUGIN_DESTINATION
-    exit 0
+    COMBINED="$(output_filename combinedXXXX.pdf)"
+    filepool_merge_pdf "$INPUT_POOL" "$PLUGIN_FILE_FORMAT" "$COMBINED"
+    OCR_PDF="$(output_filename ocrmypdfXXXX.pdf)"
+    ocrmypdf_ocr $COMBINED $OCR_PDF
+else
+    filepool_status "$INPUT_POOL" "$PLUGIN_FILE_FORMAT"
+    COMBINED="$(output_filename combinedXXXX.tiff)"
+    filepool_mergetiff $INPUT_POOL "$PLUGIN_FILE_FORMAT" "$COMBINED"
+    OCR_PDF="$(output_filename tesseractocrXXXX.pdf)"
+    tesseract_ocr $COMBINED $OCR_PDF
 fi
+mv $OCR_PDF ${PLUGIN_BASE_DIR}/${PLUGIN_DESTINATION}
 
-exit 0
-
-# old variant disabled.
-
-FILE_POOL_SIZE=$(du -kc $PLUGIN_INPUT_DIR/${PLUGIN_FILE_POOL}*.${PLUGIN_FILE_FORMAT} \
-                | tail -n1 | cut -f1)
-if test $FILE_POOL_SIZE -gt $((4 * 1024 * 1024)); then
-    echo "tiff can only contain up to 4GB of data"
-	exit 1
-fi
-COMBINED_TIFF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR combinedXXXX.tiff)"
-filepool_mergetiff "$PLUGIN_INPUT_DIR" $PLUGIN_FILE_POOL $COMBINED_TIFF
-
-TIFF="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR combinedXXXX.tif)"
-process_pnm unpaper $TIFF
-
-PDF_OCR="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR tesseractocrXXXX.pdf)"
-tesseract_ocr $TIFF $PDF_OCR
-mv $PDF_OCR $PLUGIN_DESTINATION
-
-exit 0
-
-# no ghostscript!
+exit 0 # no ghostscript!
 PDF_GS="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR ghostXXXX.pdf)"
 convert_ghostscript $PDF_OCR $PDF_GS
