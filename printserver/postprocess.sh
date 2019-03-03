@@ -76,6 +76,9 @@ if [ ! -e "$PLUGIN_OUTPUT_DIR" ]; then
     mkdir -p "$PLUGIN_OUTPUT_DIR"
 fi
 
+UNPAPER_ARGS="--dpi $PLUGIN_SCAN_DPI $PLUGIN_VERBOSE_DDASH"
+        
+
 MAGICK_TMPDIR="$(mktemp -d magickXXXX)"
 cleanup() {
     if ((PLUGIN_VERBOSE)); then
@@ -127,11 +130,7 @@ unscew() {
     for file in ${storage}/${filepool}*.pnm; do
         n=$(filepool_getNumber $file)
         output="${storage}/${temp_pool}$n.pnm"
-
-        unpaper \
-            $PLUGIN_VERBOSE_DDASH \
-            --dpi $PLUGIN_SCAN_DPI \
-            $file $output
+        unpaper $UNPAPER_ARGS $file $output
     done
 
     local pnmOutput=$(ls -l ${storage}/${temp_pool}*.pnm 2>/dev/null| wc -l)
@@ -175,7 +174,7 @@ ocrmypdf_ocr() {
 
     local unpaperargs=
     if [ "$PLUGIN_FILE_FORMAT" != "pnm" ]; then
-        unpaperargs='--unpaper-args "--dpi $PLUGIN_SCAN_DPI $PLUGIN_VERBOSE_DDASH"'
+        unpaperargs="--unpaper-args $UNPAPER_ARGS" 
         echo adding unpaper arguments:
         eval echo $unpaperargs
     fi
