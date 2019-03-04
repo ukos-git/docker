@@ -169,7 +169,7 @@ filepool_move() {
     local n
     for file in ${filepool}*.${image_format}; do
         n=$(filepool_getNumber $file)
-        mv -f "$file" "${filepool_dest}$n.${image_format}"
+        mv -f "$file" "${filepool_dest}${n}.${image_format}"
     done
 }
 
