@@ -74,6 +74,12 @@ filepool_convert() {
         local start=$(date +%s.%N)
     fi
 
+    if command -v pamtotiff; then
+        echo "New version of netpbm detected."
+        echo "See http://netpbm.sourceforge.net/doc/pamtotiff.html"
+        pamtotiff
+    fi
+
     local magick_tmpdir="$(mktemp --tmpdir -d magickXXXX)"
     trap "rm -rf $magick_tmpdir" EXIT
 
@@ -89,11 +95,6 @@ filepool_convert() {
 
         # use package netpbm http://netpbm.sourceforge.net/
         if [ "$image_format" = "pnm" -a "$image_format_dest" = "tiff" ]; then
-            if command -v pamtotiff; then
-                echo "New version of netpbm detected."
-                echo "See http://netpbm.sourceforge.net/doc/pamtotiff.html"
-                pamtotiff
-            fi
             pnmtotiff "$file" > "$output"
             continue
         fi
