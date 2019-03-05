@@ -53,7 +53,7 @@ filepool_merge_pdf() {
     if [ "$image_format" != "jpeg" -a "$image_format" != "png" -a "$image_format" != "tiff" ]; then
         local merge_dir="$(mktemp -d --tmpdir mergepdfpoolXXXX)"
         local filepool_merge="${merge_dir}/file"
-        local image_format_merge=tiff
+        local image_format_merge=png
         filepool_convert $filepool $image_format $filepool_merge $image_format_merge
         img2pdf ${filepool_merge}*.${image_format_merge} -o $outputfile
         rm -rf $merge_dir
@@ -100,6 +100,10 @@ filepool_convert() {
         fi
         if [ "$image_format" = "tiff" -a "$image_format_dest" = "pnm" ]; then
             tifftopnm "$file" > "$output"
+            continue
+        fi
+        if [ "$image_format" = "pnm" -a "$image_format_dest" = "png" ]; then
+            pnmtopng -compression 0 "$file" > "$output"
             continue
         fi
 
