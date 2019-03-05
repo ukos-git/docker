@@ -18,6 +18,7 @@ source "${SCRIPT_DIR}/filepool.sh"
 if [ -z "$PLUGIN_VERBOSE" ]; then
     PLUGIN_VERBOSE=1
 fi
+VERBOSE=$PLUGIN_VERBOSE
 
 # manually define base dir
 if [ -z "$PLUGIN_BASE_DIR" ]; then

@@ -49,6 +49,11 @@ filepool_merge_pdf() {
     local image_format=$2
     local outputfile=$3
 
+    if ((VERBOSE)); then
+        echo "--- filepool_merge_pdf ---"
+        local start=$(date +%s.%N)
+    fi
+
     # img2pdf can only handle jpeg, png, tiff file pools
     if [ "$image_format" != "jpeg" -a "$image_format" != "png" -a "$image_format" != "tiff" ]; then
         local merge_dir="$(mktemp -d --tmpdir mergepdfpoolXXXX)"
@@ -59,6 +64,13 @@ filepool_merge_pdf() {
         rm -rf $merge_dir
     else
         img2pdf ${filepool}*.${image_format} -o $outputfile
+    fi
+
+    if ((VERBOSE)); then
+        stat $outputfile
+        local end=$(date +%s.%N)
+        local diff=$(echo "$end - $start" | bc)
+        echo "--- end filepool_merge_pdf: ${diff}s ---"
     fi
 }
 
@@ -119,7 +131,7 @@ filepool_convert() {
         filepool_status $filepool_dest $image_format_dest
         local end=$(date +%s.%N)
         local diff=$(echo "$end - $start" | bc)
-        echo "--- total time: $diff ---"
+        echo "--- end filepool_convert: ${diff}s ---"
     fi
 }
 
