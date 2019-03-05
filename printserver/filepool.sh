@@ -56,7 +56,8 @@ filepool_merge_pdf() {
 
     # img2pdf can only handle jpeg, png, tiff file pools
     if [ "$image_format" != "jpeg" -a "$image_format" != "png" -a "$image_format" != "tiff" ]; then
-        local merge_dir="$(mktemp -d --tmpdir mergepdfpoolXXXX)"
+        local outputdir="$(dirname $outputfile)"
+        local merge_dir=$(mktemp -d --tmpdir="$outputdir" mergepdfpoolXXXX)
         local filepool_merge="${merge_dir}/file"
         local image_format_merge=png
         filepool_convert $filepool $image_format $filepool_merge $image_format_merge

@@ -112,10 +112,8 @@ descew() {
     fi
 
     # intermediate pools
-    local pnm_dir="$(mktemp -d --tmpdir pnmpoolXXXX)"
-    local pnm_pool="${pnm_dir}/file"
-    local unpaper_dir="$(mktemp -d --tmpdir unpaperpoolXXXX)"
-    local unpaper_pool="${unpaper_dir}/file"
+    local pnm_pool="$(mktemp_dir pnmpoolXXXX)/file"
+    local unpaper_pool="$(mktemp_dir unpaperpoolXXXX)/file"
 
     if ((PLUGIN_VERBOSE)); then
         echo "--- descew ---"
@@ -151,8 +149,9 @@ descew() {
         filepool_move $unpaper_pool pnm $filepool
     fi
     filepool_status "$filepool" $image_format
-    rm -rf $pnm_dir
-    rm -rf $unpaper_dir
+
+    rm -rf $(dirname $pnm_pool)
+    rm -rf $(dirname $unpaper_pool)
 
     if ((PLUGIN_VERBOSE)); then
         local end=$(date +%s.%N)
@@ -263,12 +262,24 @@ convert_ghostscript() {
     fi
 }
 
-output_filename() {
+# wrapper for mktemp
+# @see mktemp_dir
+mktemp_file() {
     local basename=$1
 
     mktemp --dry-run \
-           --tmpdir=${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR} \
+           --tmpdir="${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR}" \
            "$basename"
+}
+
+# wrapper for mktemp
+# stores output in output dir if in debug mode and in system temp dir on
+# default.
+# @see mktemp_file
+mktemp_dir() {
+    local basename=$1
+
+    mktemp -d --tmpdir="${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR}" "$basename"
 }
 
 echo "Beginning postprocess of scanned images..."
@@ -281,19 +292,19 @@ if [ $PLUGIN_FILE_FORMAT = pnm ]; then
 fi
 
 if command -v ocrmypdf > /dev/null; then
-    COMBINED="$(output_filename combinedXXXX.pdf)"
+    COMBINED="$(mktemp_file combinedXXXX.pdf)"
     filepool_merge_pdf "$INPUT_POOL" "$PLUGIN_FILE_FORMAT" "$COMBINED"
-    OCR_PDF="$(output_filename ocrmypdfXXXX.pdf)"
+    OCR_PDF="$(mktemp_file ocrmypdfXXXX.pdf)"
     ocrmypdf_ocr $COMBINED $OCR_PDF
 else
     filepool_status "$INPUT_POOL" "$PLUGIN_FILE_FORMAT"
-    COMBINED="$(output_filename combinedXXXX.tiff)"
+    COMBINED="$(mktemp_file combinedXXXX.tiff)"
     filepool_mergetiff $INPUT_POOL "$PLUGIN_FILE_FORMAT" "$COMBINED"
-    OCR_PDF="$(output_filename tesseractocrXXXX.pdf)"
+    OCR_PDF="$(mktemp_file tesseractocrXXXX.pdf)"
     tesseract_ocr $COMBINED $OCR_PDF
 fi
 mv $OCR_PDF ${PLUGIN_BASE_DIR}/${PLUGIN_DESTINATION}
 
 exit 0 # no ghostscript!
-PDF_GS="$(mktemp --dry-run --tmpdir=$PLUGIN_OUTPUT_DIR ghostXXXX.pdf)"
+PDF_GS="$(mktemp_file ghostXXXX.pdf)"
 convert_ghostscript $PDF_OCR $PDF_GS
