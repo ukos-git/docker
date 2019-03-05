@@ -84,7 +84,8 @@ mkdir -p "${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR}"
 
 INPUT_POOL="${PLUGIN_BASE_DIR}/${PLUGIN_INPUT_DIR}/${PLUGIN_FILE_POOL}"
 
-UNPAPER_ARGS="--dpi $PLUGIN_SCAN_DPI $PLUGIN_VERBOSE_DDASH"
+# no-gray-filter for colored images
+UNPAPER_ARGS="--no-grayfilter --dpi $PLUGIN_SCAN_DPI $PLUGIN_VERBOSE_DDASH"
         
 MAGICK_TMPDIR="$(mktemp -d magickXXXX)"
 trap "rm -rf $MAGICK_TMPDIR" EXIT
@@ -183,11 +184,10 @@ ocrmypdf_ocr() {
         exit 1
     fi
 
-
-    local unpaperargs=
+    local unpaperargs="--clean --deskew --clean-final"
     if [ "$PLUGIN_FILE_FORMAT" != "pnm" ]; then
-        echo adding unpaper arguments:
-        unpaperargs='--clean --deskew --unpaper-args "$UNPAPER_ARGS"'
+        unpaperargs="$unpaperargs --unpaper-args '$UNPAPER_ARGS'"
+        echo "adding unpaper arguments: $unpaperargs"
         eval echo $unpaperargs
     fi
 
