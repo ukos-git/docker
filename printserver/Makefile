@@ -46,3 +46,14 @@ test: build-docker
 		git reset --hard && \
 		git checkout master && \
 		git branch -D unittest
+
+process: build-docker
+	docker run --rm \
+		--env PLUGIN_BASE_DIR=${DOCKER_DIR} \
+		--env PLUGIN_INPUT_DIR=scan \
+		--env PLUGIN_FILE_POOL=SnapScanLossless \
+		--env PLUGIN_FILE_FORMAT=pnm \
+		--env PLUGIN_SCAN_DPI=600 \
+		--env PLUGIN_DEBUG=1 \
+		--env PLUGIN_VERBOSE=1 \
+		${LINKDIR} ${LATEST}

@@ -20,6 +20,12 @@ if [ -z "$PLUGIN_VERBOSE" ]; then
 fi
 VERBOSE=$PLUGIN_VERBOSE
 
+# debug level
+if [ -z "$PLUGIN_DEBUG" ]; then
+    PLUGIN_DEBUG=0
+fi
+DEBUG=$PLUGIN_DEBUG
+
 # manually define base dir
 if [ -z "$PLUGIN_BASE_DIR" ]; then
     PLUGIN_BASE_DIR="/printserver/data"
@@ -150,8 +156,10 @@ descew() {
     fi
     filepool_status "$filepool" $image_format
 
-    rm -rf $(dirname $pnm_pool)
-    rm -rf $(dirname $unpaper_pool)
+    if ((!DEBUG)); then
+        rm -rf $(dirname $pnm_pool)
+        rm -rf $(dirname $unpaper_pool)
+    fi
 
     if ((PLUGIN_VERBOSE)); then
         local end=$(date +%s.%N)
@@ -267,9 +275,13 @@ convert_ghostscript() {
 mktemp_file() {
     local basename=$1
 
-    mktemp --dry-run \
-           --tmpdir="${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR}" \
-           "$basename"
+    if ((DEBUG));then
+        mktemp --dry-run \
+               --tmpdir="${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR}" \
+               "$basename"
+    else
+        mktemp --dry-run --tmpdir "$basename"
+    fi
 }
 
 # wrapper for mktemp
@@ -279,7 +291,11 @@ mktemp_file() {
 mktemp_dir() {
     local basename=$1
 
-    mktemp -d --tmpdir="${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR}" "$basename"
+    if ((DEBUG));then
+        mktemp -d --tmpdir="${PLUGIN_BASE_DIR}/${PLUGIN_OUTPUT_DIR}" "$basename"
+    else
+        mktemp -d --tmpdir "$basename"
+    fi
 }
 
 echo "Beginning postprocess of scanned images..."

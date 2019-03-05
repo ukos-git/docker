@@ -62,7 +62,9 @@ filepool_merge_pdf() {
         local image_format_merge=png
         filepool_convert $filepool $image_format $filepool_merge $image_format_merge
         img2pdf ${filepool_merge}*.${image_format_merge} -o $outputfile
-        rm -rf $merge_dir
+        if ((!DEBUG)); then
+            rm -rf $merge_dir
+        fi
     else
         img2pdf ${filepool}*.${image_format} -o $outputfile
     fi
