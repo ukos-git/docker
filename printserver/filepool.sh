@@ -62,7 +62,7 @@ filepool_merge_pdf() {
         local outputdir="$(dirname $outputfile)"
         local merge_dir=$(mktemp -d --tmpdir="$outputdir" mergepdfpoolXXXX)
         local filepool_merge="${merge_dir}/file"
-        local image_format_merge=png
+        local image_format_merge=tiff
         filepool_convert $filepool $image_format $filepool_merge $image_format_merge
         img2pdf ${verboseddash} ${filepool_merge}*.${image_format_merge} -o $outputfile
         if ((!DEBUG)); then
