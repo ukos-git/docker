@@ -49,9 +49,12 @@ filepool_merge_pdf() {
     local image_format=$2
     local outputfile=$3
 
+    local verboseddash=
     if ((VERBOSE)); then
         echo "--- filepool_merge_pdf ---"
+        echo "output to $outputfile"
         local start=$(date +%s.%N)
+        verboseddash="--verbose"
     fi
 
     # img2pdf can only handle jpeg, png, tiff file pools
@@ -61,7 +64,7 @@ filepool_merge_pdf() {
         local filepool_merge="${merge_dir}/file"
         local image_format_merge=png
         filepool_convert $filepool $image_format $filepool_merge $image_format_merge
-        img2pdf ${filepool_merge}*.${image_format_merge} -o $outputfile
+        img2pdf ${verboseddash} ${filepool_merge}*.${image_format_merge} -o $outputfile
         if ((!DEBUG)); then
             rm -rf $merge_dir
         fi
