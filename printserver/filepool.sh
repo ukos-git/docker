@@ -21,6 +21,34 @@ filepool_getSize() {
     echo $(($(eval ls -l $files 2>/dev/null | wc -l)))
 }
 
+# use http://exactcode.com/opensource/exactimage/
+filepool_deleteempty() {
+    local filepool=$1
+    local image_format=$2
+
+    if ((VERBOSE)); then
+        echo "--- filepool_deleteempty ---"
+        local start=$(date +%s.%N)
+    fi
+
+    for file in ${filepool}*.${image_format}; do
+        if empty-page -i "$file" >/dev/null 2>&1; then
+            if ((VERBOSE)); then
+                echo "deleting $file"
+            fi
+            rm $file
+        fi
+    done
+
+    if ((VERBOSE)); then
+        filepool_status $filepool $image_format
+        local end=$(date +%s.%N)
+        local diff=$(echo "$end - $start" | bc)
+        echo "--- end filepool_deleteempty: ${diff}s ---"
+    fi
+}
+
+
 # disk usage of pool
 filepool_status() {
     local filepool=$1

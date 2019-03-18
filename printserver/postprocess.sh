@@ -301,6 +301,7 @@ mktemp_dir() {
 echo "Beginning postprocess of scanned images..."
 
 filepool_status "$INPUT_POOL" "$PLUGIN_FILE_FORMAT"
+filepool_deleteempty "$INPUT_POOL" "$PLUGIN_FILE_FORMAT"
 filepool_rotate180 "$INPUT_POOL" "$PLUGIN_FILE_FORMAT"
 
 if [ $PLUGIN_FILE_FORMAT = pnm ]; then

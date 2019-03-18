@@ -42,6 +42,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
 	apt-get update && \
 	apt-get install --assume-yes \
 		bc \
+		exactimage \
 		imagemagick \
 		img2pdf \
 		libtiff-tools \
