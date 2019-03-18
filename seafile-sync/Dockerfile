@@ -19,5 +19,5 @@ ENTRYPOINT seaf-cli start && sleep 5 && seaf-cli sync \
 		-s $SEAFILE_DOMAIN \
 		-d $SEAFILE_DIRECTORY \
 		-u $SEAFILE_USER \
-		-p $SEAFILE_PASSWORD || \
-        while seaf-cli status &>/dev/null;do sleep 5;done
+		-p $SEAFILE_PASSWORD
+CMD while seaf-cli status &>/dev/null;do sleep 5;done
