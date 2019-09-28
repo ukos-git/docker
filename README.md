@@ -1,6 +1,10 @@
-# docker
+# Monorepo for various Dockerfiles
 
-my public docker collection
+Instead of keeping every docker container in its separate repository, this is an attempt to use a single repository for all Dockerfiles. The containers are built and available on [docker hub](https://cloud.docker.com/u/ukos/)
+
+# Image description
+
+The images are located under subfolders in this repository.
 
 ## printserver-postprocess
 
