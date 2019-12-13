@@ -193,7 +193,6 @@ ocrmypdf_ocr() {
 
     eval ocrmypdf \
         --remove-background \
-        --mask-barcodes \
         ${unpaperargs} \
         --jbig2-lossy \
         --optimize 3 \
