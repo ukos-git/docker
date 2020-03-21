@@ -4,7 +4,7 @@
 #
 
 NAME := ukos/freerdp:latest
-LOCAL_ROOT := $$(git rev-parse --show-toplevel)
+LOCAL_ROOT := $$(git rev-parse --show-toplevel)/freerdp
 
 default: deb
 
@@ -16,7 +16,7 @@ build: requirements
 	docker build -t ${NAME} .
 
 deb: build
-	docker run -it -v ${LOCAL_ROOT}/deb:/opt/deb ${NAME}
+	docker run -it -v ${LOCAL_ROOT}:/opt/deb ${NAME}
 
 shell: build
-	docker run -it --entrypoint /bin/bash -v ${LOCAL_ROOT}/deb:/opt/deb ${NAME}
+	docker run -it --entrypoint /bin/bash -v ${LOCAL_ROOT}:/opt/deb ${NAME}

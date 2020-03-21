@@ -41,7 +41,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
 	uuid-dev \
 	libxml2-dev \
 	libgstreamer1.0-dev \
-	libgstreamer-plugins-base1.0-dev
+	libgstreamer-plugins-base1.0-dev \
+	libcairo2-dev
 
 # packages missing in docker image ubuntu:bionic
 RUN apt-cache policy \
@@ -71,12 +72,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
 RUN apt-get clean
 
 # go to opt
-RUN mkdir -p /opt
-
-# change to user
-RUN useradd -ms /bin/bash user
-RUN chown user /opt
-USER user
+RUN mkdir -p /opt/freerdp
 
 # clone main git repo
 RUN git clone git://github.com/FreeRDP/FreeRDP.git /opt/freerdp
@@ -88,8 +84,6 @@ RUN mkdir /opt/deb
 
 # build the package with GFX support and move it to /opt/deb
 ENTRYPOINT \
-	git pull && \
 	sed --in-place 's/DEB_CMAKE_EXTRA_FLAGS := /\0 -DWITH_GFX_H264=ON /' debian/rules && \
 	dpkg-buildpackage && \
 	cp -f /opt/*.deb /opt/deb
-
